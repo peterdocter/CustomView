@@ -1,7 +1,10 @@
 package com.stang.customview;
 
+import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.view.menu.MenuAdapter;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -11,10 +14,11 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
     RectAnimationView myView1;
-    MyView myView2;
+    RectAnimationView myView2;
     RectAnimationView myView3;
-    MyView myView4;
+    RectAnimationView myView4;
     MyView myView5;
 
 
@@ -24,20 +28,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        Log.d(TAG, "onCreate: before");
         myTextView = (TextView) findViewById(R.id.tv);
 
         myView1 = (RectAnimationView) findViewById(R.id.v1);
-        myView2 = (MyView) findViewById(R.id.v2);
+        myView2 = (RectAnimationView) findViewById(R.id.v2);
         myView3 = (RectAnimationView) findViewById(R.id.v3);
-        myView4 = (MyView) findViewById(R.id.v4);
+        myView4 = (RectAnimationView) findViewById(R.id.v4);
         myView5 = (MyView) findViewById(R.id.v5);
 
 
-        //myView1.setSpeed(100);
-        myView1.startAnim();
+        myView1.setSpeed(100);
 
-        myView2.startAnim();
+        myView1.setRunning(true);
+        myView2.setRunning(true);
+        myView3.setRunning(true);
+        myView4.setRunning(true);
+        //myView5.setRunning(true);
 
         myView2.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,9 +111,15 @@ public class MainActivity extends AppCompatActivity {
                 myTextView.setText("Animation of myView3 exploded");
             }
         });
-
+        Log.d(TAG, "onCreate: after");
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: ");
+    }
 
 
 }

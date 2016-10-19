@@ -33,38 +33,38 @@
     android:layout_height="wrap_content"
     android:layout_gravity="center"    >
 
-    <com.stang.customview.MyView
+    <com.stang.customview.RectAnimationView
         android:id="@+id/v2"
         android:layout_marginTop="0dp"
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:padding="10dp"
         android:layout_gravity="center"
-        custom:line_color="@android:color/holo_blue_light"
-        custom:line_width="1px"
-        custom:speed_animation="130"
-        custom:dot_figure="rectangle"
-        custom:dot_color="@android:color/holo_orange_dark"
-        custom:dot_width="7px"
-        custom:repeat_counts="0"
-        custom:direction="round"
+        custom:rav_line_color="@android:color/holo_blue_light"
+        custom:rav_line_width="1px"
+        custom:rav_speed_animation="130"
+        custom:rav_dot_figure="rectangle"
+        custom:rav_dot_color="@android:color/holo_orange_dark"
+        custom:rav_dot_width="7px"
+        custom:rav_repeat_counts="0"
+        custom:rav_direction="round"
         />
 
-    <com.stang.customview.MyView
+    <com.stang.customview.RectAnimationView
         android:id="@+id/v4"
         android:layout_marginLeft="20dp"
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:padding="10dp"
         android:layout_gravity="center"
-        custom:line_color="@android:color/holo_blue_light"
-        custom:line_width="1px"
-        custom:speed_animation="130"
-        custom:dot_figure="rectangle"
-        custom:dot_color="@android:color/holo_orange_dark"
-        custom:dot_width="7px"
-        custom:repeat_counts="3"
-        custom:direction="round"
+        custom:rav_line_color="@android:color/holo_blue_light"
+        custom:rav_line_width="1px"
+        custom:rav_speed_animation="130"
+        custom:rav_dot_figure="rectangle"
+        custom:rav_dot_color="@android:color/holo_orange_dark"
+        custom:rav_dot_width="7px"
+        custom:rav_repeat_counts="3"
+        custom:rav_direction="round"
         />
 
     <com.stang.customview.MyView

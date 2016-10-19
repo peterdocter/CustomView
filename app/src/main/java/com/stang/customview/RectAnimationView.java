@@ -25,7 +25,7 @@ import static java.lang.Math.abs;
  */
 
 public class RectAnimationView extends View {
-    public static final String TAG = "app";
+    public static final String TAG = RectAnimationView.class.getSimpleName();
     public static final int FIGURE_NONE = 0;
     public static final int FIGURE_RECTANGLE = 1;
     public static final int FIGURE_CIRCLE= 2;
@@ -38,8 +38,8 @@ public class RectAnimationView extends View {
     private int mRadius = 20;
     private int mCenterAlpha = 0;
     private int mSpeed = 100;
-    //private int mRepeat = 1;
-    //private long mRepeatedCycles = 0;
+    private int mRepeat = 0;
+    private long mRepeatedCycles = 0;
     private int mLineColor = Color.BLACK;
     private int mLineWidth = 2;
     private int mDotFigure = FIGURE_NONE;
@@ -52,7 +52,9 @@ public class RectAnimationView extends View {
     private Drawable mDotsImage;
     private Drawable mCenterImage;
 
+    private boolean isSetRunning = false;
     private boolean isRunning = false;
+    private boolean isPaused = false;
 
     private Vertex[] mVertex;
     AnimatorSet mAnimatorSet;
@@ -75,6 +77,8 @@ public class RectAnimationView extends View {
     public void setDotsImage(Drawable image) { mDotsImage = image; mCenterImage = image; setPaintProperties(); }
 
     public void setMCenterAlpha(int a) {mCenterAlpha = a;}
+
+    public void setRunning(boolean r) {isSetRunning = r;}
 
     public int getSpeed() { return mSpeed; }
 
@@ -131,8 +135,16 @@ public class RectAnimationView extends View {
 
 
     public void startAnim() {
-        Log.d(TAG,"start");
-        mAnimatorSet.start();
+        Log.d(TAG, "startAnim: " + this);
+        if(isPaused) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                mAnimatorSet.resume();
+            }
+            isPaused = false;
+        } else {
+            mAnimatorSet.start();
+            mRepeatedCycles += 1;
+        }
         isRunning = true;
         invalidate();
         onAnimationStarted();
@@ -141,8 +153,10 @@ public class RectAnimationView extends View {
     public void stopAnim() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             mAnimatorSet.pause();
+            isPaused = true;
         } else {
             mAnimatorSet.cancel();
+            mRepeatedCycles=0;
         }
         isRunning = false;
         onAnimationStopped();
@@ -173,6 +187,7 @@ public class RectAnimationView extends View {
             mDotFigure = a.getInt(R.styleable.RectAnimationView_rav_dot_figure, FIGURE_CIRCLE);
             mDotWidth = a.getDimensionPixelSize(R.styleable.RectAnimationView_rav_dot_width, 10);
             mLineWidth = a.getDimensionPixelSize(R.styleable.RectAnimationView_rav_line_width, 1);
+            mRepeat = a.getInt(R.styleable.RectAnimationView_rav_repeat_counts, 0);
         } finally {
             a.recycle();
         }
@@ -191,7 +206,10 @@ public class RectAnimationView extends View {
             public void onAnimationEnd(Animator animation) {
                 onAnimationCollapsed();
                 isRunning = false;
-                //
+                Log.d(TAG, "OnAnimEnd");
+                if(mRepeat==0 || mRepeatedCycles < mRepeat){
+                    startAnim();
+                }
             }
 
             @Override
@@ -217,7 +235,6 @@ public class RectAnimationView extends View {
         setPaintProperties();
     }
 
-
     private void setPaintProperties(){
         mCenterPaint.setColor(mDotColor);
         mCenterImage.setAlpha(mCenterAlpha);
@@ -235,8 +252,14 @@ public class RectAnimationView extends View {
         mWidth = w;
         mCenterX = mWidth /2;
         mCenterY = mHeight /2;
-        Log.d(TAG, "onSizeChanged: " + mHeight + ":" + mWidth + "   center: " + mCenterX + ":" + mCenterY + "   mRadius: " + mRadius);
+        Log.d(TAG, this + " onSizeChanged: " + mHeight + ":" + mWidth + "   center: " + mCenterX + ":" + mCenterY + "   mRadius: " + mRadius);
+
         init();
+
+        if(isSetRunning) {
+            startAnim();
+            isSetRunning = false;
+        }
     }
 
 
@@ -277,6 +300,7 @@ public class RectAnimationView extends View {
 
         ObjectAnimator alphaAnim = ObjectAnimator.ofInt(this, "mCenterAlpha", new int[]{0,255,0,255,0,255,0,255,0,255,0}).setDuration(2000);
 
+        mAnimatorSet.cancel();
         mAnimatorSet.playSequentially(playTo, playFrom, alphaAnim);
      }
 
