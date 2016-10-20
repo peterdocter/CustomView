@@ -42,7 +42,7 @@ public class MyView extends View {
 
     private int mHeight = 0;
     private int mWidth = 0;
-    private int mSpeed = 100;
+    private float mSpeed = 1;
     private int mRepeat = 1;
     private int mDirection = DIRECTION_ROUND;
     private int mLineColor = Color.BLACK;
@@ -108,7 +108,7 @@ public class MyView extends View {
     }
 
 
-    public void setSpeed(int speed) { mSpeed = speed; setPaintProperties(); invalidate(); }
+    public void setSpeed(float speed) { mSpeed = speed; setPaintProperties(); invalidate(); }
 
     public void setLineColor(int lineColor) { mLineColor = lineColor; setPaintProperties(); invalidate(); }
 
@@ -122,7 +122,7 @@ public class MyView extends View {
 
     public void setCustomImage(Drawable customImage) { mCustomImage = customImage; setPaintProperties(); invalidate(); }
 
-    public int getSpeed() {
+    public float getSpeed() {
         return mSpeed;
     }
 
@@ -173,7 +173,7 @@ public class MyView extends View {
         try {
             mLineColor = a.getColor(R.styleable.MyView_line_color, Color.BLACK);
             mDotColor = a.getColor(R.styleable.MyView_dot_color, Color.BLACK);
-            mSpeed = a.getInt(R.styleable.MyView_speed_animation, 100);
+            mSpeed = a.getFloat(R.styleable.MyView_speed_animation, 1);
             mRepeat = a.getInt(R.styleable.MyView_repeat_counts, 0);
             mDirection = a.getInt(R.styleable.MyView_direction, DIRECTION_ROUND);
             mDotFigure = a.getInt(R.styleable.MyView_dot_figure, FIGURE_CIRCLE);
@@ -325,7 +325,7 @@ public class MyView extends View {
                 };
             }
 
-            float step = 0.03f * mSpeed;
+            float step = 0.03f / mSpeed;
             mTimeline += (mReverseTimeline * step);
 
             invalidate();

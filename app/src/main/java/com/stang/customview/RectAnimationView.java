@@ -54,8 +54,6 @@ public class RectAnimationView extends View {
     private Drawable mCenterImage;
 
     private boolean isSetRunningOnSizeChanged = false;
-    //private boolean isRunning = false;
-    //private boolean isPaused = false;
 
     private Vertex[] mVertex;
     AnimatorSet mAnimatorSet;

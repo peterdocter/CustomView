@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         myView2 = (RectAnimationView) findViewById(R.id.v2);
         myView3 = (RectAnimationView) findViewById(R.id.v3);
 
-        //myView1.setSpeed(100);
+        //myView1.setSpeed(3.0f);
 
         myView1.setOnClickListener(new View.OnClickListener() {
             @Override
