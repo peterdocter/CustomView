@@ -1,9 +1,7 @@
 package com.stang.customview;
 
-import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.view.menu.MenuAdapter;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -34,17 +32,19 @@ public class MainActivity extends AppCompatActivity {
         myView1 = (RectAnimationView) findViewById(R.id.v1);
         myView2 = (RectAnimationView) findViewById(R.id.v2);
         myView3 = (RectAnimationView) findViewById(R.id.v3);
-        myView4 = (RectAnimationView) findViewById(R.id.v4);
-        myView5 = (MyView) findViewById(R.id.v5);
 
+        //myView1.setSpeed(100);
 
-        myView1.setSpeed(100);
-
-        myView1.setRunning(true);
-        myView2.setRunning(true);
-        myView3.setRunning(true);
-        myView4.setRunning(true);
-        //myView5.setRunning(true);
+        myView1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(myView1.isRunning()){
+                    myView1.stopAnim();
+                } else {
+                    myView1.startAnim();
+                }
+            }
+        });
 
         myView2.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,27 +68,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        myView4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(myView4.isRunning()){
-                    myView4.stopAnim();
-                } else {
-                    myView4.startAnim();
-                }
-            }
-        });
 
-        myView5.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(myView5.isRunning()){
-                    myView5.stopAnim();
-                } else {
-                    myView5.startAnim();
-                }
-            }
-        });
 
         myView3.setOnAnimationEventListener(new MyView.OnAnimationEventListener() {
             @Override

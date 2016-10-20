@@ -37,7 +37,8 @@ public class RectAnimationView extends View {
     private int mCenterY = 0;
     private int mRadius = 20;
     private int mCenterAlpha = 0;
-    private int mSpeed = 100;
+    private int mDotAlpha = 255;
+    private float mSpeed = 1f;
     private int mRepeat = 0;
     private long mRepeatedCycles = 0;
     private int mLineColor = Color.BLACK;
@@ -52,9 +53,9 @@ public class RectAnimationView extends View {
     private Drawable mDotsImage;
     private Drawable mCenterImage;
 
-    private boolean isSetRunning = false;
-    private boolean isRunning = false;
-    private boolean isPaused = false;
+    private boolean isSetRunningOnSizeChanged = false;
+    //private boolean isRunning = false;
+    //private boolean isPaused = false;
 
     private Vertex[] mVertex;
     AnimatorSet mAnimatorSet;
@@ -62,7 +63,7 @@ public class RectAnimationView extends View {
     MyView.OnAnimationEventListener mAnimationListener = null;
 
 
-    public void setSpeed(int speed) { mSpeed = speed; setPaintProperties(); }
+    public void setSpeed(float speed) { mSpeed = speed; setPaintProperties(); }
 
     public void setLineColor(int lineColor) { mLineColor = lineColor; setPaintProperties(); }
 
@@ -78,9 +79,11 @@ public class RectAnimationView extends View {
 
     public void setMCenterAlpha(int a) {mCenterAlpha = a;}
 
-    public void setRunning(boolean r) {isSetRunning = r;}
+    public void setMDotAlpha(int a) {mDotAlpha = a;}
 
-    public int getSpeed() { return mSpeed; }
+    public void setRunningOnSizeChanged(boolean r) { isSetRunningOnSizeChanged = r; }
+
+    public float getSpeed() { return mSpeed; }
 
     public int getLineColor() { return mLineColor; }
 
@@ -94,7 +97,7 @@ public class RectAnimationView extends View {
 
     public Drawable getDotsImage() { return mDotsImage; }
 
-    public boolean isRunning() { return isRunning; }
+    public boolean isRunning() { return mAnimatorSet.isRunning(); }
 
 
     public void setOnAnimationEventListener(MyView.OnAnimationEventListener listener) {
@@ -136,41 +139,31 @@ public class RectAnimationView extends View {
 
     public void startAnim() {
         Log.d(TAG, "startAnim: " + this);
-        if(isPaused) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if((Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) && (mAnimatorSet.isPaused())) {
                 mAnimatorSet.resume();
-            }
-            isPaused = false;
         } else {
+            init();
             mAnimatorSet.start();
-            mRepeatedCycles += 1;
         }
-        isRunning = true;
-        invalidate();
-        onAnimationStarted();
     }
 
     public void stopAnim() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             mAnimatorSet.pause();
-            isPaused = true;
         } else {
             mAnimatorSet.cancel();
             mRepeatedCycles=0;
         }
-        isRunning = false;
-        onAnimationStopped();
+        setRunningOnSizeChanged(false);
     }
 
 
     //-------------------------------
     // RecrAnimationView constructors
     //-------------------------------
-
     public RectAnimationView(Context context) {
         super(context);
     }
-
     public RectAnimationView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -183,7 +176,7 @@ public class RectAnimationView extends View {
         try {
             mLineColor = a.getColor(R.styleable.RectAnimationView_rav_line_color, Color.BLACK);
             mDotColor = a.getColor(R.styleable.RectAnimationView_rav_dot_color, Color.BLACK);
-            mSpeed = a.getInt(R.styleable.RectAnimationView_rav_speed_animation, 100);
+            mSpeed = a.getFloat(R.styleable.RectAnimationView_rav_speed_animation, 1f);
             mDotFigure = a.getInt(R.styleable.RectAnimationView_rav_dot_figure, FIGURE_CIRCLE);
             mDotWidth = a.getDimensionPixelSize(R.styleable.RectAnimationView_rav_dot_width, 10);
             mLineWidth = a.getDimensionPixelSize(R.styleable.RectAnimationView_rav_line_width, 1);
@@ -194,35 +187,7 @@ public class RectAnimationView extends View {
 
         mRadius = mDotWidth;
 
-        mAnimatorSet = new AnimatorSet();
-        mAnimatorSet.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                onAnimationExploded();
-                //
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                onAnimationCollapsed();
-                isRunning = false;
-                Log.d(TAG, "OnAnimEnd");
-                if(mRepeat==0 || mRepeatedCycles < mRepeat){
-                    startAnim();
-                }
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                //
-                isRunning = false;
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-                //
-            }
-        });
+        if(mRepeat > -1) { setRunningOnSizeChanged(true); }
 
         mLinePaint = new Paint();
         mDotPaint = new Paint();
@@ -234,6 +199,7 @@ public class RectAnimationView extends View {
 
         setPaintProperties();
     }
+
 
     private void setPaintProperties(){
         mCenterPaint.setColor(mDotColor);
@@ -256,9 +222,9 @@ public class RectAnimationView extends View {
 
         init();
 
-        if(isSetRunning) {
-            startAnim();
-            isSetRunning = false;
+        if(isSetRunningOnSizeChanged) {
+            mAnimatorSet.start();
+            mRepeatedCycles++;
         }
     }
 
@@ -280,28 +246,98 @@ public class RectAnimationView extends View {
         mVertex[2] = new Vertex(rightBottom, right, center);
         mVertex[3] = new Vertex(rightUp, up, center);
 
+        int duration = (int) (1000 / mSpeed);
         int delay = 200;
 
         AnimatorSet playTo = new AnimatorSet();
+        playTo.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                onAnimationCollapsed();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
         playTo.playTogether(
-                mVertex[0].setStartDelay(delay * 0).getAnimTo(),
-                mVertex[1].setStartDelay(delay * 1).getAnimTo(),
-                mVertex[2].setStartDelay(delay * 2).getAnimTo(),
-                mVertex[3].setStartDelay(delay * 3).getAnimTo()
+                mVertex[0].setStartDelay(delay * 0).getAnimTo(duration),
+                mVertex[1].setStartDelay(delay * 1).getAnimTo(duration),
+                mVertex[2].setStartDelay(delay * 2).getAnimTo(duration),
+                mVertex[3].setStartDelay(delay * 3).getAnimTo(duration)
                 );
 
         AnimatorSet playFrom = new AnimatorSet();
+        playFrom.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {  }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                onAnimationExploded();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {  }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {  }
+        });
         playFrom.playTogether(
-                mVertex[0].setStartDelay(delay * 0).getAnimFrom(),
-                mVertex[1].setStartDelay(delay * 1).getAnimFrom(),
-                mVertex[2].setStartDelay(delay * 2).getAnimFrom(),
-                mVertex[3].setStartDelay(delay * 3).getAnimFrom()
+                mVertex[0].setStartDelay(delay * 0).getAnimFrom(duration),
+                mVertex[1].setStartDelay(delay * 1).getAnimFrom(duration),
+                mVertex[2].setStartDelay(delay * 2).getAnimFrom(duration),
+                mVertex[3].setStartDelay(delay * 3).getAnimFrom(duration)
         );
 
-        ObjectAnimator alphaAnim = ObjectAnimator.ofInt(this, "mCenterAlpha", new int[]{0,255,0,255,0,255,0,255,0,255,0}).setDuration(2000);
+        ObjectAnimator alphaCenterAnim = ObjectAnimator.ofInt(this, "mCenterAlpha", new int[]{0,255,0,255,0,255,0}).setDuration(duration *2);
+        ObjectAnimator alphaVertexAnim = ObjectAnimator.ofInt(this, "mDotAlpha", new int[]{255,0,155,0,155,0,255}).setDuration(duration *2);
 
-        mAnimatorSet.cancel();
-        mAnimatorSet.playSequentially(playTo, playFrom, alphaAnim);
+
+        //mAnimatorSet.cancel();
+        mAnimatorSet = new AnimatorSet();
+        mAnimatorSet.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                postInvalidateDelayed(1);
+                onAnimationStarted();
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                Log.d(TAG, "OnAnimEnd");
+                if(mRepeat==0 || mRepeatedCycles < mRepeat){
+                    mRepeatedCycles++;
+                    mAnimatorSet.start();
+                } else {
+                    onAnimationStopped();
+                    setRunningOnSizeChanged(false);
+                }
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                //
+                onAnimationStopped();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+                postInvalidateDelayed(1);
+            }
+        });
+        mAnimatorSet.playSequentially(playTo, alphaVertexAnim, playFrom, alphaCenterAnim);
      }
 
 
@@ -309,16 +345,19 @@ public class RectAnimationView extends View {
     protected void onDraw(Canvas canvas) {
         drawLines(canvas);
         drawDots(canvas);
-        if(isRunning()) postInvalidateDelayed(50);
+        //if(isRunning()) postInvalidateDelayed(50);
+        if(mAnimatorSet.isRunning()) postInvalidateDelayed(50);
     }
 
     private void drawDots(Canvas canvas) {
+        mCenterPaint.setAlpha(mCenterAlpha);
+        mDotPaint.setAlpha(mDotAlpha);
+
         switch (mDotFigure){
             case FIGURE_NONE: //none
                 break;
 
             case FIGURE_RECTANGLE:
-                mCenterPaint.setAlpha(mCenterAlpha);
                 canvas.drawRect(mHeight /2- mRadius *2, mWidth /2- mRadius *2, mHeight /2+ mRadius *2, mWidth /2+ mRadius *2, mCenterPaint);
                 for (int i = 0; i < mVertex.length; i++) {
                     canvas.drawRect(mVertex[i].getX()- mRadius, mVertex[i].getY()- mRadius, mVertex[i].getX()+ mRadius, mVertex[i].getY()+ mRadius, mDotPaint);
@@ -326,7 +365,6 @@ public class RectAnimationView extends View {
                 break;
 
             case FIGURE_CIRCLE:
-                mCenterPaint.setAlpha(mCenterAlpha);
                 canvas.drawCircle(mHeight /2, mWidth /2, mRadius *2, mCenterPaint);
                 for (int i = 0; i < mVertex.length; i++) {
                     canvas.drawCircle(mVertex[i].getX(), mVertex[i].getY(), mRadius, mDotPaint);
@@ -339,7 +377,7 @@ public class RectAnimationView extends View {
                 mCenterImage.setAlpha(mCenterAlpha);
                 mCenterImage.draw(canvas);
 
-                mDotsImage.setAlpha(255);
+                mDotsImage.setAlpha(mDotAlpha);
                 for (int i = 0; i < mVertex.length; i++) {
                     mDotsImage.setBounds(mVertex[i].getX()- mRadius, mVertex[i].getY()- mRadius,
                             mVertex[i].getX()+ mRadius, mVertex[i].getY()+ mRadius);
@@ -368,9 +406,7 @@ public class RectAnimationView extends View {
         public Point(int x, int y) { this.x = x; this.y = y; }
 
         public int getX() { return x; }
-        public int getY() {
-            return y;
-        }
+        public int getY() { return y; }
         public void setX(int x) { this.x = x;}
         public void setY(int y) { this.y = y;}
      }
@@ -397,8 +433,7 @@ public class RectAnimationView extends View {
 
         }
 
-        public AnimatorSet getAnimTo(){
-            int duration = 1000;
+        public AnimatorSet getAnimTo(int duration){
             int[] xArray = new int[mPath.size()];
             int[] yArray = new int[mPath.size()];
 
@@ -413,8 +448,7 @@ public class RectAnimationView extends View {
             return result;
         }
 
-        public AnimatorSet getAnimFrom(){
-            int duration = 1000;
+        public AnimatorSet getAnimFrom(int duration){
             int[] xArray = new int[mPath.size()];
             int[] yArray = new int[mPath.size()];
 
@@ -454,12 +488,16 @@ public class RectAnimationView extends View {
             }
         }
 
-        public Vertex(){
+        public Vertex(){ }
 
+        public void setStartPosition(){
+            if(mCurrentPoint != null){
+                mCurrentPoint.setX(mPath[0].getX());
+                mCurrentPoint.setY(mPath[0].getY());
+            }
         }
 
-        public AnimatorSet getAnimTo(){
-            int duration = 1000;
+        public AnimatorSet getAnimTo(int duration){
             int[] xArray = new int[mPath.length];
             int[] yArray = new int[mPath.length];
 
@@ -475,8 +513,7 @@ public class RectAnimationView extends View {
             return result;
         }
 
-        public AnimatorSet getAnimFrom(){
-            int duration = 1000;
+        public AnimatorSet getAnimFrom(int duration){
             int[] xArray = new int[mPath.length];
             int[] yArray = new int[mPath.length];
 
